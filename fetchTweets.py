@@ -7,6 +7,8 @@ POIs = yaml.load(open("twitter.yaml", 'r'))['POIs']
 for POI, areas in POIs.iteritems():
     print POI, areas
 
+for POI in POIs:
+    print POI, POIs[POI]
 
 #api = tweetpony.API(consumer_key = config[u'consumer_key'], consumer_secret = config[u'consumer_secret'], access_token = config[u'access_token'], access_token_secret = config[u'access_token_secret'])
 
