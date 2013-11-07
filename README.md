@@ -1,8 +1,7 @@
 Bottawa
 =======
 
-sudo apt-get install python-pip
-sudo apt-get install python-yaml
+sudo apt-get install python-pip python-yaml
 
 sudo pip install tweetpony
 
