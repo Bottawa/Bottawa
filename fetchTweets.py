@@ -1,18 +1,16 @@
-import json, yaml, tweetpony
+import json, yaml#, tweetpony
 
-config = json.load(open('config.json'))
+#config = json.load(open('config.json'))
 
-POI = yaml.load(open("twitter.yaml", 'r'))['POI']
+POIs = yaml.load(open("twitter.yaml", 'r'))['POIs']
 
-api = tweetpony.API(consumer_key = config[u'consumer_key'], consumer_secret = config[u'consumer_secret'], access_token = config[u'access_token'], access_token_secret = config[u'access_token_secret'])
+for POI, areas in POIs.iteritems():
+    print POI, areas
 
-output = api.search_tweets(q='',geocode="45.428629,-75.69311,0.2km")
 
-print output
+#api = tweetpony.API(consumer_key = config[u'consumer_key'], consumer_secret = config[u'consumer_secret'], access_token = config[u'access_token'], access_token_secret = config[u'access_token_secret'])
 
-#try:
-#    api.update_status(status = text)
-#except tweetpony.APIError as err:
-#    print "Oops, something went wrong! Twitter returned error #%i and said: %s" % (err.code, err.description)
-#else:
-#    print "Yay! Your tweet has been sent!"
+#output = api.search_tweets(q='',geocode="45.428629,-75.69311,0.2km")
+
+#print output
+
