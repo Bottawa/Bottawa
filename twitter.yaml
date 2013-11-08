@@ -1,17 +1,13 @@
 POIs:
-  GTA:
+  Byward Market:
     areas:
       -  
-        lat: 43.7
-        long: -79.416
-        range: 40km
-      -  
-        lat: 43.7
-        long: -79.416
-        range: 40km
-  Montreal:
+        lat: 45.428629
+        long: -75.69311
+        range: 0.2km
+  Parliment Hill:
     areas:
       -  
-        lat: 45.509
-        long: -73.588
-        range: 40km
+        lat: 45.424344
+        long: -75.699259
+        range: 0.2km

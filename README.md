@@ -1,7 +1,7 @@
 Bottawa
 =======
 
-sudo apt-get install python-pip python-yaml
+sudo apt-get install python-pip python-yaml python-mysqldb
 
 sudo pip install tweetpony
 
