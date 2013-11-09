@@ -1,13 +1,71 @@
-POIs:
-#  Byward Market:
-#    areas:
-#      -  
-#        lat: 45.428629
-#        long: -75.69311
-#        range: 0.2km
+regions:
+  Byward Market:
+    areas:
+      -  
+        lat: 45.428629
+        long: -75.69311
+        range: 0.2km
   Parliment Hill:
     areas:
       -  
         lat: 45.424344
         long: -75.699259
+        range: 0.2km
+  Elgin St:
+    areas:
+      -
+        lat: 45.413485
+        long: -75.686581
+        range: 0.2km
+  City Hall:
+    areas:
+      -
+        lat: 45.420624
+        long: -75.69059
+        range: 0.2km
+  Confederation Park:
+    areas:
+      -
+        lat: 45.422462
+        long: -75.691706
+        range: 0.2km
+  Majors Hill Park:
+    areas:
+      -
+        lat: 45.427477
+        long: -75.697517
+        range: 0.2km
+  University of Ottawa:
+    areas:
+      -
+        lat: 45.423877
+        long: -75.684668
+        range: 0.3km
+      -
+        lat: 45.421468
+        long: -75.681041
+        range: 0.3km
+  Dows lake:
+    areas:
+      -
+        lat: 45.395165
+        long: -75.702459
+        range: 0.4km
+  Canadian Museum of Nature:
+    areas:
+      -
+        lat: 45.412784
+        long: -75.688612
+        range: 0.1km
+  Westboro Beach:
+    areas:
+      -
+        lat: 45.395444
+        long: -75.76112
+        range: 0.1km
+  Canadian War Museum:
+    areas:
+      -
+        lat: 45.416527
+        long: -75.717651
         range: 0.2km
