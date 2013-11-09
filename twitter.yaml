@@ -1,10 +1,10 @@
 POIs:
-  Byward Market:
-    areas:
-      -  
-        lat: 45.428629
-        long: -75.69311
-        range: 0.2km
+#  Byward Market:
+#    areas:
+#      -  
+#        lat: 45.428629
+#        long: -75.69311
+#        range: 0.2km
   Parliment Hill:
     areas:
       -  
