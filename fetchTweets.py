@@ -243,3 +243,6 @@ for region in regions:
         insert_data()
         print organised_tweets
         time.sleep(5)
+
+
+logger.info('End time\n\n\n')
