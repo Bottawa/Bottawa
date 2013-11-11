@@ -69,9 +69,9 @@ regions:
         lat: 45.416527
         long: -75.717651
         range: 0.2km
-  Ottawa:
-    areas:
-      -  
-        lat: 45.411
-        long: -75.698
-        range: 40km
+  # Ottawa:
+  #   areas:
+  #     -  
+  #       lat: 45.411
+  #       long: -75.698
+  #       range: 40km

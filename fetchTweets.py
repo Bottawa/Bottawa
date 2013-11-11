@@ -30,9 +30,9 @@ def connect_api():
     api = Twitter(auth=OAuth(config['twitter']['access_token'], config['twitter']['access_token_secret'], config['twitter']['consumer_key'], config['twitter']['consumer_secret']))
     logger.debug('api loaded')
 
-def query_twitter(lat, long, range):
+def query_twitter(lat, long, range, max_id):
     geocode_string = str(lat) + ","+ str(long) + "," + str(range)
-    return api.search.tweets(q='',geocode=geocode_string,count=100,result_type='recent')
+    return api.search.tweets(q='',geocode=geocode_string,max_id=str(max_id),count=100,result_type='recent')
 
 def to_esc_sql(text):
     return re.escape(text.replace("\\_", "_")).encode('utf8')
@@ -111,7 +111,7 @@ def organise_raw_tweets(raw_tweets, region):
         insert_tweet(tweet)
         insert_region(tweet, region)
         insert_user(tweet['user'])
-        print tweet
+        #print tweet
         for user in tweet['entities']['user_mentions']:
             insert_user_mentions(tweet['id'], user['id'])
 
@@ -125,7 +125,7 @@ def organise_raw_tweets(raw_tweets, region):
 
 def insert_data():
     for tweet in organised_tweets['tweets']:
-        print tweet
+        #print tweet
         query = """
           INSERT IGNORE INTO `Tweets`
           SET
@@ -143,13 +143,13 @@ def insert_data():
                 retweeted=tweet[0]['retweeted'],
                 text=to_esc_sql(tweet[0]['text']),
                 created_at=tweet[0]['created_at'])
-        print query
+        #print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
 
     for region in organised_tweets['regions']:
-        print region
+        #print region
         query = """
           INSERT IGNORE INTO `TweetRegions`
           SET
@@ -157,13 +157,13 @@ def insert_data():
             `region` = '{region}';""".format(
                 tweet_id=region[0]['tweet_id'],
                 region=region[0]['region'])
-        print query
+        #print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
 
     for user in organised_tweets['users']:
-        print user
+        #print user
         query = """
           INSERT IGNORE INTO `TwitterUsers`
           SET
@@ -185,13 +185,13 @@ def insert_data():
                 statuses_count=user[0]['statuses_count'],
                 profile_image_url=to_esc_sql(user[0]['profile_image_url']),
                 created_at=tweet[0]['created_at'])
-        print query
+        #print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
 
     for user_mention in organised_tweets['user_mentions']:
-        print user_mention
+        #print user_mention
         query = """
           INSERT IGNORE INTO `TweetUserMentions`
           SET
@@ -199,13 +199,13 @@ def insert_data():
             `usr_id` = {usr_id};""".format(
                 tweet_id=user_mention[0]['tweet_id'],
                 usr_id=user_mention[0]['usr_id'])
-        print user_mention
+        #print user_mention
         cur = db.cursor()
         cur.execute(query)
         db.commit()
 
     for hashtag in organised_tweets['hashtags']:
-        print hashtag
+        #print hashtag
         query = """
           INSERT IGNORE INTO `TweetHashtags`
           SET
@@ -213,13 +213,13 @@ def insert_data():
             `hashtag` = '{hashtag}';""".format(
                 tweet_id=hashtag[0]['tweet_id'],
                 hashtag=to_esc_sql(hashtag[0]['hashtag']))
-        print hashtag
+        #print hashtag
         cur = db.cursor()
         cur.execute(query)
         db.commit()
 
     for url in organised_tweets['urls']:
-        print url
+        #print url
         query = """
           INSERT IGNORE INTO `TweetUrls`
           SET
@@ -227,10 +227,24 @@ def insert_data():
             `url` = '{url}';""".format(
                 tweet_id=url[0]['tweet_id'],
                 url=to_esc_sql(url[0]['url']))
-        print url
+        #print url
         cur = db.cursor()
         cur.execute(query)
         db.commit()
+
+def get_max_id(region):
+    query = """
+      SELECT COALESCE(MAX(t.id), 0)
+      FROM
+        Tweets t
+        INNER JOIN TweetRegions tr ON t.id = tr.tweet_id
+      WHERE region = '{region}';""".format(region=region)
+    cur = db.cursor()
+    cur.execute(query)
+    db.commit()
+    for row in cur.fetchall():
+        max_id = row[0]
+    return int(max_id)
 
 load_config()
 connect_db()
@@ -238,11 +252,14 @@ load_api()
 connect_api()
 
 for region in regions:
+    logger.debug('Pulling tweets for: ' + region)
+    max_id = get_max_id(region)
     for area in regions[region]['areas']:
-        organise_raw_tweets(query_twitter(area['lat'], area['long'], area['range']),region)
+        organise_raw_tweets(query_twitter(area['lat'], area['long'], area['range'], max_id),region)
+        logger.info(str(len(organised_tweets['tweets'])) + ' tweets pulled')
         insert_data()
-        print organised_tweets
-        time.sleep(5)
+        #print organised_tweets
+        time.sleep(2)
 
 
 logger.info('End time\n\n\n')
