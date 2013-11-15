@@ -22,8 +22,23 @@ def connect_db():
 
 def load_api():
     global regions
-    regions = yaml.load(open("twitter.yaml", 'r'))['regions']
-    logger.debug('loaded twitter yaml')
+    regions = {}
+    query = """
+      SELECT r.region_id, r.name, a.lat, a.long, a.range
+      FROM
+        Regions r
+        INNER JOIN Areas a ON r.region_id = a.region_id;"""
+    cur = db.cursor()
+    cur.execute(query)
+    rows = cur.fetchall()
+    for row in rows:
+        if row[1] in regions:
+            regions[row[1]]['areas'].append({'lat': row[2], 'long': row[3], 'range': str(row[4]) + 'km'})
+        else:
+            regions[row[1]] = {'areas': [{'lat': row[2], 'long': row[3], 'range': str(row[4]) + 'km'}]}
+        regions[row[1]]['id'] = row[0]
+    logger.debug('loaded twitter regions from DB')
+    return regions
 
 def connect_api():
     global api
@@ -32,7 +47,7 @@ def connect_api():
 
 def query_twitter(lat, long, range, max_id):
     geocode_string = str(lat) + ","+ str(long) + "," + str(range)
-    return api.search.tweets(q='',geocode=geocode_string,max_id=str(max_id),count=100,result_type='recent')
+    return api.search.tweets(q='',geocode=geocode_string,max_id=max_id,count=100,result_type='recent')
 
 def to_esc_sql(text):
     return re.escape(text.replace("\\_", "_")).encode('utf8')
@@ -59,16 +74,16 @@ def insert_tweet(tweet):
         'long': long
         }])
 
-def insert_region(tweet, region):
+def insert_region(tweet, region_id):
     organised_tweets['regions'].append([{
         'tweet_id': tweet['id'],
-        'region': region
+        'region_id': region_id
         }])
 
 def insert_user(user):
     created_at = time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(user['created_at'],'%a %b %d %H:%M:%S +0000 %Y'))
     organised_tweets['users'].append([{
-        'id': user['id'],
+        'usr_id': user['id'],
         'screen_name': user['screen_name'],
         'name': user['name'],
         'location': user['location'],
@@ -98,7 +113,7 @@ def insert_url(tweet_id, url):
         'url': url
         }])
 
-def organise_raw_tweets(raw_tweets, region):
+def organise_raw_tweets(raw_tweets, region_id):
     global organised_tweets
     organised_tweets = dict()
     organised_tweets['tweets'] = list()
@@ -109,7 +124,7 @@ def organise_raw_tweets(raw_tweets, region):
     organised_tweets['urls'] = list()
     for tweet in raw_tweets['statuses']:
         insert_tweet(tweet)
-        insert_region(tweet, region)
+        insert_region(tweet, region_id)
         insert_user(tweet['user'])
         #print tweet
         for user in tweet['entities']['user_mentions']:
@@ -129,7 +144,7 @@ def insert_data():
         query = """
           INSERT IGNORE INTO `Tweets`
           SET
-            `id` = {id},
+            `tweet_id` = {id},
             `usr_id` = {usr_id},
             `lat` = {lat},
             `long` = {long},
@@ -154,9 +169,9 @@ def insert_data():
           INSERT IGNORE INTO `TweetRegions`
           SET
             `tweet_id` = {tweet_id},
-            `region` = '{region}';""".format(
+            `region_id` = '{region_id}';""".format(
                 tweet_id=region[0]['tweet_id'],
-                region=region[0]['region'])
+                region_id=region[0]['region_id'])
         #print query
         cur = db.cursor()
         cur.execute(query)
@@ -167,7 +182,7 @@ def insert_data():
         query = """
           INSERT IGNORE INTO `TwitterUsers`
           SET
-            `id` = {id},
+            `usr_id` = {usr_id},
             `screen_name` = '{screen_name}',
             `name` = '{name}',
             `location` = '{location}',
@@ -176,7 +191,7 @@ def insert_data():
             `statuses_count` = {statuses_count},
             `profile_image_url` = '{profile_image_url}',
             `created_at` = '{created_at}';""".format(
-                id=user[0]['id'],
+                usr_id=user[0]['usr_id'],
                 screen_name=to_esc_sql(user[0]['screen_name']),
                 name=to_esc_sql(user[0]['name']),
                 location=to_esc_sql(user[0]['location']),
@@ -232,13 +247,11 @@ def insert_data():
         cur.execute(query)
         db.commit()
 
-def get_max_id(region):
+def get_max_id(region_id):
     query = """
-      SELECT COALESCE(MAX(t.id), 0)
-      FROM
-        Tweets t
-        INNER JOIN TweetRegions tr ON t.id = tr.tweet_id
-      WHERE region = '{region}';""".format(region=region)
+      SELECT COALESCE(MAX(tweet_id), 0)
+      FROM TweetRegions
+      WHERE region_id = {region_id};""".format(region_id=region_id)
     cur = db.cursor()
     cur.execute(query)
     db.commit()
@@ -251,14 +264,17 @@ connect_db()
 load_api()
 connect_api()
 
+
+
 for region in regions:
-    logger.debug('Pulling tweets for: ' + region)
-    max_id = get_max_id(region)
+    logger.info('Pulling tweets for: ' + region)
+    region_id = regions[region]['id']
+    max_id = get_max_id(region_id)
     for area in regions[region]['areas']:
-        organise_raw_tweets(query_twitter(area['lat'], area['long'], area['range'], max_id),region)
+        organise_raw_tweets(query_twitter(area['lat'], area['long'], area['range'], max_id),region_id)
         logger.info(str(len(organised_tweets['tweets'])) + ' tweets pulled')
         insert_data()
-        #print organised_tweets
+        print organised_tweets
         time.sleep(2)
 
 
