@@ -169,7 +169,7 @@ def insert_data():
           INSERT IGNORE INTO `TweetRegions`
           SET
             `tweet_id` = {tweet_id},
-            `region_id` = '{region_id}';""".format(
+            `region_id` = {region_id};""".format(
                 tweet_id=region[0]['tweet_id'],
                 region_id=region[0]['region_id'])
         #print query
@@ -214,7 +214,7 @@ def insert_data():
             `usr_id` = {usr_id};""".format(
                 tweet_id=user_mention[0]['tweet_id'],
                 usr_id=user_mention[0]['usr_id'])
-        #print user_mention
+        #print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
@@ -228,7 +228,7 @@ def insert_data():
             `hashtag` = '{hashtag}';""".format(
                 tweet_id=hashtag[0]['tweet_id'],
                 hashtag=to_esc_sql(hashtag[0]['hashtag']))
-        #print hashtag
+        print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
@@ -242,7 +242,7 @@ def insert_data():
             `url` = '{url}';""".format(
                 tweet_id=url[0]['tweet_id'],
                 url=to_esc_sql(url[0]['url']))
-        #print url
+        #print query
         cur = db.cursor()
         cur.execute(query)
         db.commit()
@@ -257,14 +257,13 @@ def get_max_id(region_id):
     db.commit()
     for row in cur.fetchall():
         max_id = row[0]
-    return int(max_id)
+    logger.debug('Max_id = ' + str(max_id))
+    return max_id
 
 load_config()
 connect_db()
 load_api()
 connect_api()
-
-
 
 for region in regions:
     logger.info('Pulling tweets for: ' + region)
@@ -274,8 +273,8 @@ for region in regions:
         organise_raw_tweets(query_twitter(area['lat'], area['long'], area['range'], max_id),region_id)
         logger.info(str(len(organised_tweets['tweets'])) + ' tweets pulled')
         insert_data()
-        print organised_tweets
-        time.sleep(2)
+        #print organised_tweets
+        time.sleep(5)
 
 
 logger.info('End time\n\n\n')
